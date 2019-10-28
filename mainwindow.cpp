@@ -3,11 +3,11 @@
 
 #include <QMessageBox>
 #include <QHBoxLayout>
-#include <QPlainTextEdit>
 #include <QtMath>
 
 
 #include "box256glwidget.h"
+#include "tablecelledit.h"
 static QString getHexNum(int i, int numLeadingZeros=0)
 {
     QString hexNum = "";
@@ -45,13 +45,54 @@ MainWindow::MainWindow(QWidget *parent)
     {
         for(int c=0;c<4;c++)
         {
-            auto cellText = new QPlainTextEdit(srcTable);
+            auto cellText = new TableCellEdit(srcTable,r,c);
+            cellTexts[r][c]=cellText;
             cellText->setPlainText(getHexNum(data[r*4 + c],2));
             srcTable->setCellWidget(r,c,cellText);
+            connect(cellText,SIGNAL(textChanged()),this,SLOT(on_srcCellChanged()));
         }
     }
 }
+void MainWindow::on_srcCellChanged()
+{
+    auto srcTblCell = static_cast<TableCellEdit*>(sender());
+    QString text = srcTblCell->toPlainText();
 
+    if(text.length()>3)//Limit size of input
+    {
+        text = ""+text[0]+text[1]+text[2];
+    }
+    QChar c1 = text[0];
+    QChar c2 = text[1];
+    QChar c3 = text[2];
+
+    if(srcTblCell->getCellColumn()==0)
+    {
+        text="";
+        if(c1.isLetter()||c1.isNumber())text+=c1;
+        if(c2.isLetter()||c2.isNumber())text+=c2;
+        if(c3.isLetter()||c3.isNumber())text+=c3;
+    }
+    if(srcTblCell->getCellColumn()>0)
+    {
+        text="";
+        if(c1.isNumber()||c1=="-"||c1=="@"||c1=="*"){
+            text+=c1;
+        }else{text+="0";}
+        if(c2.isNumber()){
+            text+=c2;
+        }else{text+="0";}
+        if(c3.isNumber()){
+            text+=c3;
+        }else{text+="0";}
+    }
+
+    text = text.toUpper();
+    if(text!=srcTblCell->toPlainText())
+    {
+        srcTblCell->setPlainText(text);
+    }
+}
 MainWindow::~MainWindow()
 {
     delete ui;

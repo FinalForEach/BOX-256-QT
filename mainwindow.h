@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPlainTextEdit>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -17,10 +18,11 @@ public:
 
 private slots:
     void on_actionAbout_QT_triggered();
-
     void on_actionAbout_triggered();
+    void on_srcCellChanged();
 
 private:
     Ui::MainWindow *ui;
+    QPlainTextEdit *cellTexts[64][4];
 };
 #endif // MAINWINDOW_H
