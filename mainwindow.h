@@ -24,5 +24,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QPlainTextEdit *cellTexts[64][4];
+    QString sourceData[256];
+    uint8_t memData[256];
 };
 #endif // MAINWINDOW_H
