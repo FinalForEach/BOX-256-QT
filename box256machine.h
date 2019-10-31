@@ -2,14 +2,14 @@
 #define BOX256MACHINE_H
 
 #include "boxtypes.h"
-class box256machine
+class Box256Machine
 {
 private:
     BOXBYTE data[256];
     int numThreads;
 public:
 
-    box256machine();
+    Box256Machine();
 
     void writeValue(AccessMethod valMethod, AccessMethod toMethod, BOXBYTE wval, BOXBYTE toVal);
     BOXBYTE getValue(AccessMethod valMethod, BOXBYTE getter);

@@ -1,10 +1,10 @@
 #include "box256machine.h"
 
-box256machine::box256machine(): numThreads(0)
+Box256Machine::Box256Machine(): numThreads(0)
 {
 
 }
-void box256machine::writeValue(AccessMethod valMethod, AccessMethod toMethod, BOXBYTE wval, BOXBYTE toVal)
+void Box256Machine::writeValue(AccessMethod valMethod, AccessMethod toMethod, BOXBYTE wval, BOXBYTE toVal)
 {
     BOXBYTE w = getValue(valMethod,wval);
     switch(toMethod) {
@@ -21,7 +21,7 @@ void box256machine::writeValue(AccessMethod valMethod, AccessMethod toMethod, BO
         }
     }
 }
-BOXBYTE box256machine::getValue(AccessMethod valMethod, BOXBYTE getter)
+BOXBYTE Box256Machine::getValue(AccessMethod valMethod, BOXBYTE getter)
 {
     switch(valMethod)
     {
@@ -39,16 +39,16 @@ BOXBYTE box256machine::getValue(AccessMethod valMethod, BOXBYTE getter)
         }
     }
 }
-BOXBYTE box256machine::getPC(BOXBYTE threadNum)
+BOXBYTE Box256Machine::getPC(BOXBYTE threadNum)
 {
     return 0xFF - threadNum;
 }
-void box256machine::createThread()
+void Box256Machine::createThread()
 {
     if(numThreads>=0xFF)return;//Already at max threads.
     numThreads++;
 }
-void box256machine::step()
+void Box256Machine::step()
 {
     for(BOXBYTE t=0;t<numThreads;t++)
     {
