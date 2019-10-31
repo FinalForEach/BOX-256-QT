@@ -17,12 +17,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     box256glwidget.cpp \
+    box256machine.cpp \
     main.cpp \
     mainwindow.cpp \
     tablecelledit.cpp
 
 HEADERS += \
     box256glwidget.h \
+    box256machine.h \
+    boxtypes.h \
     mainwindow.h \
     tablecelledit.h
 
