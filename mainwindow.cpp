@@ -7,6 +7,8 @@
 #include <QTableWidget>
 #include <QLabel>
 #include <QHeaderView>
+#include <QButtonGroup>
+#include <QPushButton>
 
 #include "box256glwidget.h"
 #include "tablecelledit.h"
@@ -40,6 +42,18 @@ MainWindow::MainWindow(QWidget *parent)
     ui->gridLayout->addWidget(srcTable,1,0,Qt::AlignLeft);
     ui->gridLayout->addWidget(memTable,1,1,Qt::AlignLeft);
     ui->gridLayout->addWidget(box256Widget,1,2,1,2);
+
+    QPushButton *stopButton = new QPushButton("Stop",this);
+    QPushButton *stepButton = new QPushButton("Step",this);
+    QPushButton *playButton = new QPushButton("Play",this);
+
+    ui->gridLayout->addWidget(stopButton, 2,0);
+    ui->gridLayout->addWidget(stepButton, 2,1);
+    ui->gridLayout->addWidget(playButton, 2,2);
+
+    connect(stopButton, SIGNAL(released()), this, SLOT(stopMachine()));
+    connect(stepButton, SIGNAL(released()), this, SLOT(stepMachine()));
+    connect(playButton, SIGNAL(released()), this, SLOT(playMachine()));
 
     //Setup table labels
     QStringList srcColLabels = {"Cmd","A","B","C"};
@@ -81,25 +95,37 @@ MainWindow::MainWindow(QWidget *parent)
         {
             auto cellText = new TableCellEdit(srcTable,r,c);
             cellTexts[r][c]=cellText;
-            cellText->setPlainText(getHexNum(sourceData[r][c].toInt(),0));
+            cellText->setPlainText(getHexNum(0,0));
 
             srcTable->setCellWidget(r,c,cellText);
             connect(cellText,SIGNAL(textChanged()),this,SLOT(on_srcCellChanged()));
         }
     }
     //Setup memory table
-    for(int r=0;r<64;r++)
+    for(BOXBYTE r=0;r<64;r++)
     {
-        for(int c=0;c<4;c++)
+        for(BOXBYTE c=0;c<4;c++)
         {
-            memData[r*4+c]=0;
-            auto cellText = new QLabel(getHexNum(memData[r*4+c]),memTable);
+            auto data = machine.getValue(AccessMethod::ABSOLUTE,r*4 + c);
+            auto cellText = new QLabel(getHexNum(data),memTable);
             cellText->setAlignment(Qt::AlignCenter);
             memTable->setCellWidget(r,c,cellText);
         }
     }
     memTable->setShowGrid(false);
     memTable->horizontalHeader()->hide();
+}
+void MainWindow::stopMachine()
+{
+    machine.reset();
+}
+void MainWindow::stepMachine()
+{
+    machine.step();
+}
+void MainWindow::playMachine()
+{
+    machine.step();
 }
 void MainWindow::on_srcCellChanged()
 {
@@ -138,7 +164,6 @@ void MainWindow::on_srcCellChanged()
         if(text=="")text="0";
     }
     text = text.toUpper();
-    sourceData[srcTblCell->getCellRow()][srcTblCell->getCellColumn()]=text;
     if(text!=srcTblCell->toPlainText())
     {
         srcTblCell->setPlainText(text);

@@ -17,6 +17,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     box256glwidget.cpp \
+    box256instructions.cpp \
     box256machine.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -36,3 +37,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+	box256resources.qrc

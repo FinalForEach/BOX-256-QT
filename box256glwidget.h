@@ -10,6 +10,7 @@
 #include <QBasicTimer>
 #include <QTimerEvent>
 
+#include "box256machine.h"
 class Box256GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
 private:
@@ -18,6 +19,7 @@ private:
     QOpenGLShaderProgram gridShader;
     QOpenGLBuffer gridVertBuffer;
     int numGridVerts;
+    Box256Machine machine;
 public:
     Box256GLWidget();
     ~Box256GLWidget() override;

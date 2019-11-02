@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QPlainTextEdit>
 
+#include <box256machine.h>
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -20,11 +21,14 @@ private slots:
     void on_actionAbout_QT_triggered();
     void on_actionAbout_triggered();
     void on_srcCellChanged();
+    void stopMachine();
+    void stepMachine();
+    void playMachine();
 
 private:
     Ui::MainWindow *ui;
     QPlainTextEdit *cellTexts[64][4];
-    QString sourceData[64][4];
-    uint8_t memData[256];
+    Box256Machine machine;
+
 };
 #endif // MAINWINDOW_H

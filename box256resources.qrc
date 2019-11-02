@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/machine">
+        <file>opcodes.csv</file>
+    </qresource>
+</RCC>

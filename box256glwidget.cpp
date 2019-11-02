@@ -2,7 +2,8 @@
 #include <QtMath>
 #include <QOpenGLFunctions>
 #include <iostream>
-Box256GLWidget::Box256GLWidget(): qTimer(), time(0), gridVertBuffer(QOpenGLBuffer::VertexBuffer), numGridVerts(0)
+Box256GLWidget::Box256GLWidget()
+    : qTimer(), time(0), gridVertBuffer(QOpenGLBuffer::VertexBuffer), numGridVerts(0), machine()
 {
     qTimer.start(1000/60,this);
 }
@@ -64,8 +65,6 @@ void Box256GLWidget::resizeGL(int w, int h)
 }
 void Box256GLWidget::drawGrid()
 {
-
-
     gridShader.bind();
 
     gridShader.setAttributeBuffer("aPos",GL_FLOAT,0,2);
