@@ -5,7 +5,6 @@
 #include <QHBoxLayout>
 #include <QtMath>
 #include <QTableWidget>
-#include <QLabel>
 #include <QHeaderView>
 #include <QButtonGroup>
 #include <QPushButton>
@@ -23,7 +22,7 @@ static QString getHexNum(int i, int numLeadingZeros=0)
         }
     }
     hexNum+=QString::number(i,16);
-    return hexNum;
+    return hexNum.toUpper();
 }
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -106,8 +105,9 @@ MainWindow::MainWindow(QWidget *parent)
     {
         for(BOXBYTE c=0;c<4;c++)
         {
-            auto data = machine.getValue(AccessMethod::ABSOLUTE,r*4 + c);
+            auto data = machine.getValue(AccessMethod::ADDRESS,r*4 + c);
             auto cellText = new QLabel(getHexNum(data),memTable);
+            memLabels[r][c] = cellText;
             cellText->setAlignment(Qt::AlignCenter);
             memTable->setCellWidget(r,c,cellText);
         }
@@ -125,7 +125,18 @@ void MainWindow::stepMachine()
 }
 void MainWindow::playMachine()
 {
+    BOXBYTE op = machine.getOpcodeFromCommand("PIX",AccessMethod::CONSTANT, AccessMethod::CONSTANT);
+    machine.writeValue(op,0x0);
+    machine.writeValue(0xFF,0x1);
+    machine.writeValue(0x0B,0x2);
     machine.step();
+
+    for(BOXBYTE r=0;r<64;r++){
+        for(BOXBYTE c=0;c<4;c++){
+            auto data = machine.getValue(AccessMethod::ADDRESS,r*4 + c);
+            memLabels[r][c]->setText(getHexNum(data,1));
+        }
+    }
 }
 void MainWindow::on_srcCellChanged()
 {

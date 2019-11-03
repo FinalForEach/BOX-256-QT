@@ -5,6 +5,11 @@
 
 Box256Machine::Box256Machine(): numThreads(1), curCycle(0)
 {
+    for(int x=0x0;x<0xFF;x++)
+    {
+        pixels[x]=0;
+        data[x]=0;
+    }
     QFile opcodeFile(":/machine/opcodes.csv");
     if(!opcodeFile.open(QIODevice::ReadOnly)){
         QMessageBox::warning(nullptr,"Error","Could not load opcode file, error: "+opcodeFile.errorString());
@@ -28,7 +33,7 @@ Box256Machine::Box256Machine(): numThreads(1), curCycle(0)
         QString p3 = fields[fieldIndexes["P3"]];
         Box256Instruction *inst = nullptr;
 
-        int opcodeNum = opCodeStr.toInt(nullptr,16);
+        BOXBYTE opcodeNum = static_cast<BOXBYTE>(opCodeStr.toInt(nullptr,16));
         int numArgs = 3;
 
         if(instName=="NOP"){
@@ -60,34 +65,38 @@ Box256Machine::Box256Machine(): numThreads(1), curCycle(0)
         }else if(instName=="JNE"){
             inst = new Box256InstructionJNE();
         }
+        inst->instName=instName;
 
         if(p1=="0"){
             inst->accessParamA=AccessMethod::CONSTANT;
         }else if(p1=="@"){
-            inst->accessParamA=AccessMethod::ABSOLUTE;
+            inst->accessParamA=AccessMethod::ADDRESS;
         }else if(p1=="*"){
             inst->accessParamA=AccessMethod::POINTER;
         }else{
+            inst->accessParamA=AccessMethod::NONE;
             numArgs--;
         }
 
         if(p2=="0"){
             inst->accessParamB=AccessMethod::CONSTANT;
         }else if(p2=="@"){
-            inst->accessParamB=AccessMethod::ABSOLUTE;
+            inst->accessParamB=AccessMethod::ADDRESS;
         }else if(p2=="*"){
             inst->accessParamB=AccessMethod::POINTER;
         }else{
+            inst->accessParamB=AccessMethod::NONE;
             numArgs--;
         }
 
         if(p3=="0"){
             inst->accessParamC=AccessMethod::CONSTANT;
         }else if(p3=="@"){
-            inst->accessParamC=AccessMethod::ABSOLUTE;
+            inst->accessParamC=AccessMethod::ADDRESS;
         }else if(p3=="*"){
             inst->accessParamC=AccessMethod::POINTER;
         }else{
+            inst->accessParamC=AccessMethod::NONE;
             numArgs--;
         }
 
@@ -95,6 +104,21 @@ Box256Machine::Box256Machine(): numThreads(1), curCycle(0)
 
         instMap.insert(opcodeNum,inst);
     }
+}
+BOXBYTE Box256Machine::getOpcodeFromCommand(QString name, AccessMethod accessA, AccessMethod accessB, AccessMethod accessC)
+{
+    for(auto opcode : instMap.keys())
+    {
+        auto inst = instMap[opcode];
+        if(inst->instName==name){
+            if((inst->accessParamA==accessA)
+                &&(inst->accessParamB==accessB)
+                &&(inst->accessParamC==accessC)){
+                return opcode;
+            }
+        }
+    }
+    return 0;
 }
 void Box256Machine::writeValue(BOXBYTE wval, BOXBYTE addr)
 {
@@ -104,18 +128,18 @@ void Box256Machine::writePixel(BOXBYTE wval, BOXBYTE pixAddr)
 {
     pixels[pixAddr]=wval;
 }
-BOXBYTE Box256Machine::getPixel(BOXBYTE pixAddr)
+BOXBYTE Box256Machine::getPixel(BOXBYTE pixAddr) const
 {
     return pixels[pixAddr];
 }
-BOXBYTE Box256Machine::getValue(AccessMethod valMethod, BOXBYTE getter)
+BOXBYTE Box256Machine::getValue(AccessMethod valMethod, BOXBYTE getter) const
 {
     switch(valMethod)
     {
         case AccessMethod::CONSTANT:{
             return getter;
         }
-        case AccessMethod::ABSOLUTE:{
+        case AccessMethod::ADDRESS:{
             return data[getter];
         }
         case AccessMethod::POINTER:{
@@ -126,7 +150,7 @@ BOXBYTE Box256Machine::getValue(AccessMethod valMethod, BOXBYTE getter)
         }
     }
 }
-BOXBYTE Box256Machine::getPC(BOXBYTE threadNum)
+BOXBYTE Box256Machine::getPC(BOXBYTE threadNum) const
 {
     return 0xFF - threadNum;
 }
@@ -139,13 +163,13 @@ void Box256Machine::step()
 {
     for(BOXBYTE t=0;t<numThreads;t++)
     {
-        BOXBYTE pc = getPC(t);
+        BOXBYTE pc = getValue(AccessMethod::ADDRESS,getPC(t));
 
-        BOXBYTE opcode = getValue(AccessMethod::ABSOLUTE,pc);
+        BOXBYTE opcode = getValue(AccessMethod::ADDRESS,pc);
 
         Box256Instruction *inst = instMap[opcode];
         inst->execute(this,pc);
-        data[pc]++;//Increment program counter.
+        data[getPC(t)]++;//Increment program counter.
     }
     curCycle++;
 }

@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QPlainTextEdit>
+#include <QLabel>
 
 #include <box256machine.h>
 QT_BEGIN_NAMESPACE
@@ -28,6 +29,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QPlainTextEdit *cellTexts[64][4];
+    QLabel *memLabels[64][4];
     Box256Machine machine;
 
 };

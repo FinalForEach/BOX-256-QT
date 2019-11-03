@@ -49,7 +49,7 @@ void Box256InstructionJGR::execute(Box256Machine *machine, BOXBYTE pc){};
 Box256InstructionPIX::Box256InstructionPIX() : Box256Instruction(){}
 void Box256InstructionPIX::execute(Box256Machine *machine, BOXBYTE pc)
 {
-    machine->writePixel(paramA,paramB);
+    machine->writePixel(paramB,paramA);
 };
 
 //FLP

@@ -5,7 +5,7 @@
 typedef uint8_t BOXBYTE;
 enum class AccessMethod
 {
-    CONSTANT, ABSOLUTE, POINTER, NONE
+    CONSTANT, ADDRESS, POINTER, NONE
 };
 
 #endif // BOXTYPES_H

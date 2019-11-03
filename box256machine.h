@@ -11,7 +11,7 @@ private:
     BOXBYTE data[256];
     BOXBYTE pixels[256];
     int numThreads;
-    QMap<int,Box256Instruction*> instMap;
+    QMap<BOXBYTE,Box256Instruction*> instMap;
     int curCycle;
 public:
 
@@ -19,9 +19,9 @@ public:
 
     void writeValue(BOXBYTE wval, BOXBYTE addr);
     void writePixel(BOXBYTE wval, BOXBYTE pixAddr);
-    BOXBYTE getPixel(BOXBYTE pixAddr);
-    BOXBYTE getValue(AccessMethod valMethod, BOXBYTE getter);
-    BOXBYTE getPC(BOXBYTE threadNum);
+    BOXBYTE getPixel(BOXBYTE pixAddr) const;
+    BOXBYTE getValue(AccessMethod valMethod, BOXBYTE getter) const;
+    BOXBYTE getPC(BOXBYTE threadNum) const;
     void createThread();
 
     void step();
@@ -31,22 +31,24 @@ public:
     {
         return numThreads;
     }
+    BOXBYTE getOpcodeFromCommand(QString name, AccessMethod accessA,
+                                 AccessMethod accessB=AccessMethod::NONE, AccessMethod accessC=AccessMethod::NONE);
 };
 
 class Box256Instruction
 {
 protected:
     BOXBYTE getParamA(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE paramA = machine->getValue(accessParamA,pc) + 1;
+        BOXBYTE paramA = machine->getValue(AccessMethod::ADDRESS,pc + 1);
         return machine->getValue(accessParamA,paramA);
     }
     BOXBYTE getParamB(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE paramB = machine->getValue(accessParamA,pc) + 2;
-        return machine->getValue(accessParamA,paramB);
+        BOXBYTE paramB = machine->getValue(AccessMethod::ADDRESS,pc + 2);
+        return machine->getValue(accessParamB,paramB);
     }
     BOXBYTE getParamC(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE paramC = machine->getValue(accessParamA,pc) + 3;
-        return machine->getValue(accessParamA,paramC);
+        BOXBYTE paramC = machine->getValue(AccessMethod::ADDRESS,pc + 3);
+        return machine->getValue(accessParamC,paramC);
     }
 
 public:
@@ -54,6 +56,7 @@ public:
     AccessMethod accessParamA;
     AccessMethod accessParamB;
     AccessMethod accessParamC;
+    QString instName;
     Box256Instruction();
     virtual ~Box256Instruction();
     virtual void execute(Box256Machine *machine, BOXBYTE pc)=0;

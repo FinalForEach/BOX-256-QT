@@ -96,11 +96,11 @@ void Box256GLWidget::updatePixels()
         for(BOXBYTE j=0x0;j<=0xF;j++)
         {
             float y = j*2*s - 0.5f;
-            BOXBYTE color = machine->getPixel(i*0xF + j);
+            BOXBYTE color = machine->getPixel(j*0x10 + i);
 #define setColor(red,green,blue) r=red/255.0f;g=green/255.0f;b=blue/255.0f
             float r=0,g=0,b=0;
-            switch (color % 0xF) {
-                case 0x0:{setColor(50,0,0);break;}
+            switch (color % 0x10) {
+                case 0x0:{setColor(0,0,0);break;}
                 case 0x1:{setColor(31,46,80);break;}
                 case 0x2:{setColor(116,50,83);break;}
                 case 0x3:{setColor(61,129,84);break;}
@@ -119,7 +119,7 @@ void Box256GLWidget::updatePixels()
             }
 #undef setColor
 #define vx(f) verticesVec.push_back(f+x); numPixelVerts++
-#define vy(f) verticesVec.push_back(f+y); numPixelVerts++
+#define vy(f) verticesVec.push_back(f-y); numPixelVerts++
 #define vc verticesVec.push_back(r);verticesVec.push_back(g);verticesVec.push_back(b);numPixelVerts+=3
             vx(-s);vy(-s);vc;vx(-s);vy(s);vc;vx(s);vy(s);vc;
             vx(-s);vy(-s);vc;vx(s);vy(-s);vc;vx(s);vy(s);vc;
