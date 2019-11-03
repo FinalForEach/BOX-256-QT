@@ -18,10 +18,13 @@ private:
     double time;
     QOpenGLShaderProgram gridShader;
     QOpenGLBuffer gridVertBuffer;
+    QOpenGLShaderProgram pixShader;
+    QOpenGLBuffer pixVertBuffer;
     int numGridVerts;
-    Box256Machine machine;
+    int numPixelVerts;
+    Box256Machine *machine;
 public:
-    Box256GLWidget();
+    Box256GLWidget(Box256Machine *m);
     ~Box256GLWidget() override;
 protected:
     void initializeGL() override;
@@ -29,6 +32,8 @@ protected:
     void paintGL() override;
     void timerEvent(QTimerEvent *) override;
     void drawGrid();
+    void drawPixels();
+    void updatePixels();
 };
 
 #endif // BOX256GLWIDGET_H

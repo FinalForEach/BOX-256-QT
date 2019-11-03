@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QTableWidget *srcTable = new QTableWidget(64,4,this);
     QTableWidget *memTable = new QTableWidget(64,4,this);
-    Box256GLWidget* box256Widget = new Box256GLWidget();
+    Box256GLWidget* box256Widget = new Box256GLWidget(&machine);
     ui->gridLayout->addWidget(srcTable,1,0,Qt::AlignLeft);
     ui->gridLayout->addWidget(memTable,1,1,Qt::AlignLeft);
     ui->gridLayout->addWidget(box256Widget,1,2,1,2);

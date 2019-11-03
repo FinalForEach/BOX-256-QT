@@ -19,6 +19,7 @@ public:
 
     void writeValue(BOXBYTE wval, BOXBYTE addr);
     void writePixel(BOXBYTE wval, BOXBYTE pixAddr);
+    BOXBYTE getPixel(BOXBYTE pixAddr);
     BOXBYTE getValue(AccessMethod valMethod, BOXBYTE getter);
     BOXBYTE getPC(BOXBYTE threadNum);
     void createThread();

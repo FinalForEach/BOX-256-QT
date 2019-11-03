@@ -104,6 +104,10 @@ void Box256Machine::writePixel(BOXBYTE wval, BOXBYTE pixAddr)
 {
     pixels[pixAddr]=wval;
 }
+BOXBYTE Box256Machine::getPixel(BOXBYTE pixAddr)
+{
+    return pixels[pixAddr];
+}
 BOXBYTE Box256Machine::getValue(AccessMethod valMethod, BOXBYTE getter)
 {
     switch(valMethod)
