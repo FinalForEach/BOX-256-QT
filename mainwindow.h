@@ -31,6 +31,8 @@ private:
     QPlainTextEdit *cellTexts[64][4];
     QLabel *memLabels[64][4];
     Box256Machine machine;
+    void updateMemoryLabels();
+    void loadBoxFile(const QString& fileName);
 
 };
 #endif // MAINWINDOW_H

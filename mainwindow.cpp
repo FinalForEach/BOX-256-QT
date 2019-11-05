@@ -8,6 +8,8 @@
 #include <QHeaderView>
 #include <QButtonGroup>
 #include <QPushButton>
+#include <QFile>
+#include <QTextStream>
 
 #include "box256glwidget.h"
 #include "tablecelledit.h"
@@ -114,34 +116,134 @@ MainWindow::MainWindow(QWidget *parent)
     }
     memTable->setShowGrid(false);
     memTable->horizontalHeader()->hide();
+    loadBoxFile(":/machine/default_blue_square.box256");
+}
+void MainWindow::loadBoxFile(const QString& fileName)
+{
+    QFile boxFile(fileName);
+    QTextStream boxStream(&boxFile);
+    if(!boxFile.open(QIODevice::ReadOnly))
+    {
+        QMessageBox::warning(this,"Could not load box file.",
+                             "Error: <b>"+ boxFile.errorString()+"</b>");
+    }
+    int r=0;
+    while(!boxStream.atEnd())
+    {
+        auto fields = boxStream.readLine().split(" ");
+        if(r>=64)
+        {
+            QMessageBox::warning(this,"Could not load box file.",
+                                 "The save file had too many lines to fit in the source table.<br/>"
+                                 "Could only load <b>" + QString::number(r)+"</b> lines");
+            break;
+        }
+        cellTexts[r][0]->setPlainText(fields[0]);
+        cellTexts[r][1]->setPlainText(fields[1]);
+        cellTexts[r][2]->setPlainText(fields[2]);
+        cellTexts[r][3]->setPlainText(fields[3]);
+        r++;
+    }
+
+    boxFile.close();
 }
 void MainWindow::stopMachine()
 {
     machine.reset();
+    updateMemoryLabels();
+}
+AccessMethod getAccessMethodFromSymbol(QChar c)
+{
+    if(c=='0')return AccessMethod::CONSTANT;
+    if(c=='@')return AccessMethod::ADDRESS;
+    if(c=='*')return AccessMethod::POINTER;
+    return AccessMethod::NONE;
 }
 void MainWindow::stepMachine()
 {
-    machine.step();
-}
-void MainWindow::playMachine()
-{
-    BOXBYTE op = machine.getOpcodeFromCommand("PIX",AccessMethod::CONSTANT, AccessMethod::CONSTANT);
+    if(machine.curCycle==0)//Convert source to memory code on start.
+    {
+        for(BOXBYTE r=0;r<64;r++)
+        {
+            auto cmdText = cellTexts[r][0]->toPlainText();
+            auto pAText = cellTexts[r][1]->toPlainText();
+            auto pBText = cellTexts[r][2]->toPlainText();
+            auto pCText = cellTexts[r][3]->toPlainText();
+            //Add constant addressing in the case of a number that has no zero at the start.
+            if(pAText[0]!='0' && pAText[0]!='@' && pAText[0]!='*'){pAText.insert(0,'0');}
+            if(pBText[0]!='0' && pBText[0]!='@' && pBText[0]!='*'){pBText.insert(0,'0');}
+            if(pCText[0]!='0' && pCText[0]!='@' && pCText[0]!='*'){pCText.insert(0,'0');}
+
+
+            BOXBYTE op = machine.getOpcodeFromCommand(cmdText,
+                getAccessMethodFromSymbol(pAText[0]),
+                getAccessMethodFromSymbol(pBText[0]),
+                getAccessMethodFromSymbol(pCText[0]));
+            if(cmdText[0]=='0')//If number stored, do not write as opcode.
+            {
+                if(cmdText.length()>1){cmdText.remove(0,1);}
+                if(cmdText=="")cmdText="0";
+                bool isCmdNum;
+                BOXBYTE i = cmdText.toInt(&isCmdNum,16);
+                if(isCmdNum)op=i;
+            }
+            //Get rid of addressing symbol
+            pAText.remove(0,1);
+            pBText.remove(0,1);
+            pCText.remove(0,1);
+            //Get values
+            bool okA, okB, okC;
+            BOXBYTE numA = static_cast<BOXBYTE>(pAText.toInt(&okA,16));
+            BOXBYTE numB = static_cast<BOXBYTE>(pBText.toInt(&okB,16));
+            BOXBYTE numC = static_cast<BOXBYTE>(pCText.toInt(&okC,16));
+            if(!okA)numA=0;
+            if(!okB)numB=0;
+            if(!okC)numC=0;
+            machine.writeValue(op,r*0x04 + 0x0);
+            machine.writeValue(numA,r*0x04 + 0x1);
+            machine.writeValue(numB,r*0x04 + 0x2);
+            machine.writeValue(numC,r*0x04 + 0x3);
+        }
+    }
+   /* BOXBYTE op = machine.getOpcodeFromCommand("PIX",AccessMethod::CONSTANT, AccessMethod::CONSTANT);
     machine.writeValue(op,0x0);
     machine.writeValue(0xFF,0x1);
-    machine.writeValue(0x0B,0x2);
+    machine.writeValue(0x0B,0x2);*/
     machine.step();
 
+    //Update memory table after step.
+    updateMemoryLabels();
+}
+void MainWindow::updateMemoryLabels()
+{
     for(BOXBYTE r=0;r<64;r++){
         for(BOXBYTE c=0;c<4;c++){
             auto data = machine.getValue(AccessMethod::ADDRESS,r*4 + c);
             memLabels[r][c]->setText(getHexNum(data,1));
+            memLabels[r][c]->setStyleSheet("QLabel {background: white}");
+            for(int t=0;t<machine.getNumThreads();t++)
+            {
+                int pc = machine.getValue(AccessMethod::ADDRESS,machine.getPC(t));
+                if(pc/4 ==r)
+                {
+                    memLabels[r][c]->setStyleSheet("QLabel {background: blue}");
+                }
+            }
         }
+    }
+}
+void MainWindow::playMachine()
+{
+    for(int i=0;i<100;i++)
+    {
+        stepMachine();
     }
 }
 void MainWindow::on_srcCellChanged()
 {
     auto srcTblCell = static_cast<TableCellEdit*>(sender());
     QString text = srcTblCell->toPlainText();
+    text = text.toUpper();
 
     if(text.length()>3)//Limit size of input
     {
@@ -164,10 +266,10 @@ void MainWindow::on_srcCellChanged()
         if(c1.isNumber()||c1=="-"||c1=="@"||c1=="*"){
             text+=c1;
         }
-        if(c2.isNumber()){
+        if(c2.isNumber() || (c2>='A' && c2<='F')){
             text+=c2;
         }
-        if(c3.isNumber()){
+        if(c3.isNumber() || (c3>='A' && c3<='F')){
             text+=c3;
         }
 

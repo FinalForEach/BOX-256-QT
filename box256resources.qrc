@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/machine">
         <file>opcodes.csv</file>
+        <file>default_blue_square.box256</file>
     </qresource>
 </RCC>

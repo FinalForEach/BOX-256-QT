@@ -3,13 +3,9 @@
 #include <QMessageBox>
 #include <QTextStream>
 
-Box256Machine::Box256Machine(): numThreads(1), curCycle(0)
+Box256Machine::Box256Machine()
 {
-    for(int x=0x0;x<0xFF;x++)
-    {
-        pixels[x]=0;
-        data[x]=0;
-    }
+    reset();
     QFile opcodeFile(":/machine/opcodes.csv");
     if(!opcodeFile.open(QIODevice::ReadOnly)){
         QMessageBox::warning(nullptr,"Error","Could not load opcode file, error: "+opcodeFile.errorString());
@@ -104,12 +100,15 @@ Box256Machine::Box256Machine(): numThreads(1), curCycle(0)
 
         instMap.insert(opcodeNum,inst);
     }
+    opcodeFile.close();
 }
 BOXBYTE Box256Machine::getOpcodeFromCommand(QString name, AccessMethod accessA, AccessMethod accessB, AccessMethod accessC)
 {
+    //Try strict check - exact same accesses
     for(auto opcode : instMap.keys())
     {
         auto inst = instMap[opcode];
+        if(inst==nullptr)continue;
         if(inst->instName==name){
             if((inst->accessParamA==accessA)
                 &&(inst->accessParamB==accessB)
@@ -118,6 +117,20 @@ BOXBYTE Box256Machine::getOpcodeFromCommand(QString name, AccessMethod accessA, 
             }
         }
     }
+    //Try permissive check - constants are treated as none.
+    for(auto opcode : instMap.keys())
+    {
+        auto inst = instMap[opcode];
+        if(inst==nullptr)continue;
+        if(inst->instName==name){
+            if((inst->accessParamA==accessA || (inst->accessParamA==AccessMethod::NONE && accessA==AccessMethod::CONSTANT))
+                &&(inst->accessParamB==accessB || (inst->accessParamB==AccessMethod::NONE && accessB==AccessMethod::CONSTANT))
+                &&(inst->accessParamC==accessC || (inst->accessParamC==AccessMethod::NONE && accessC==AccessMethod::CONSTANT))){
+                return opcode;
+            }
+        }
+    }
+    //No opcode found
     return 0;
 }
 void Box256Machine::writeValue(BOXBYTE wval, BOXBYTE addr)
@@ -163,18 +176,26 @@ void Box256Machine::step()
 {
     for(BOXBYTE t=0;t<numThreads;t++)
     {
+        currentThread=t;
         BOXBYTE pc = getValue(AccessMethod::ADDRESS,getPC(t));
 
         BOXBYTE opcode = getValue(AccessMethod::ADDRESS,pc);
 
         Box256Instruction *inst = instMap[opcode];
+        if(inst==nullptr)inst=instMap[0x0];//Do NOP if no opcode found.
         inst->execute(this,pc);
-        data[getPC(t)]++;//Increment program counter.
+        data[getPC(t)]+=4;//Increment program counter.
     }
     curCycle++;
 }
 void Box256Machine::reset()
 {
+    currentThread=0;
     curCycle=0;
     numThreads=1;
+    for(int b=0x0; b<0x100;b++)
+    {
+        data[b]=0x0;
+        pixels[b]=0x0;
+    }
 }
