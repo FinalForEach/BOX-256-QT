@@ -217,6 +217,23 @@ void MainWindow::stepMachine()
             if(pBText[0]!='0' && pBText[0]!='@' && pBText[0]!='*'){pBText.insert(0,'0');}
             if(pCText[0]!='0' && pCText[0]!='@' && pCText[0]!='*'){pCText.insert(0,'0');}
 
+            if(cmdText=="ADD" || cmdText == "MUL")//Commutative expressions
+            {
+                //Ensure that the constant parameter(if any) is second
+                if(getAccessMethodFromSymbol(pAText[0])==AccessMethod::CONSTANT)
+                {
+                    auto tmp = pBText;
+                    pBText = pAText;
+                    pAText = tmp;
+                }
+                if(cmdText=="ADD" && getAccessMethodFromSymbol(pAText[0])==AccessMethod::ADDRESS
+                        && getAccessMethodFromSymbol(pCText[0])==AccessMethod::POINTER)
+                {//Ensure address is second if pointer is third for ADD to be true to spec.
+                    auto tmp = pBText;
+                    pBText = pAText;
+                    pAText = tmp;
+                }
+            }
 
             BOXBYTE op = machine.getOpcodeFromCommand(cmdText,
                 getAccessMethodFromSymbol(pAText[0]),

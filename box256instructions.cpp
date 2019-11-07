@@ -24,7 +24,13 @@ void Box256InstructionMOV::execute(Box256Machine *machine, BOXBYTE pc)
 {
     for(int i=0;i<paramC_r || i==0;i++)
     {
-        machine->writeValue(paramA_r,paramB_w + i);
+        if(accessParamA==AccessMethod::CONSTANT)
+        {
+            machine->writeValue(paramA_r,paramB_w + i);
+        }else
+        {
+            machine->writeValue(machine->getValue(AccessMethod::ADDRESS,paramA_w + i),paramB_w + i);
+        }
     }
 }
 

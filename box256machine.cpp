@@ -104,30 +104,33 @@ Box256Machine::Box256Machine()
 }
 BOXBYTE Box256Machine::getOpcodeFromCommand(QString name, AccessMethod accessA, AccessMethod accessB, AccessMethod accessC)
 {
-    //Try strict check - exact same accesses
-    for(auto opcode : instMap.keys())
+    QVector<BOXBYTE> candidates;
+    for(auto opcode : instMap.keys())//Get possible opcodes.
     {
         auto inst = instMap[opcode];
         if(inst==nullptr)continue;
         if(inst->instName==name){
-            if((inst->accessParamA==accessA)
-                &&(inst->accessParamB==accessB)
-                &&(inst->accessParamC==accessC)){
-                return opcode;
-            }
+            candidates.append(opcode);
+        }
+    }
+    //Try strict check - exact same accesses
+    for(auto opcode : candidates)
+    {
+        auto inst = instMap[opcode];
+        if((inst->accessParamA==accessA)
+            &&(inst->accessParamB==accessB)
+            &&(inst->accessParamC==accessC)){
+            return opcode;
         }
     }
     //Try permissive check - constants are treated as none.
-    for(auto opcode : instMap.keys())
+    for(auto opcode : candidates)
     {
         auto inst = instMap[opcode];
-        if(inst==nullptr)continue;
-        if(inst->instName==name){
-            if((inst->accessParamA==accessA || (inst->accessParamA==AccessMethod::NONE && accessA==AccessMethod::CONSTANT))
-                &&(inst->accessParamB==accessB || (inst->accessParamB==AccessMethod::NONE && accessB==AccessMethod::CONSTANT))
-                &&(inst->accessParamC==accessC || (inst->accessParamC==AccessMethod::NONE && accessC==AccessMethod::CONSTANT))){
-                return opcode;
-            }
+        if((inst->accessParamA==accessA || (inst->accessParamA==AccessMethod::NONE && accessA==AccessMethod::CONSTANT))
+            &&(inst->accessParamB==accessB || (inst->accessParamB==AccessMethod::NONE && accessB==AccessMethod::CONSTANT))
+            &&(inst->accessParamC==accessC || (inst->accessParamC==AccessMethod::NONE && accessC==AccessMethod::CONSTANT))){
+            return opcode;
         }
     }
     //No opcode found
