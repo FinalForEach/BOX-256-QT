@@ -192,7 +192,7 @@ void MainWindow::stopMachine()
 }
 AccessMethod getAccessMethodFromSymbol(QChar c)
 {
-    if(c=='0')return AccessMethod::CONSTANT;
+    if(c=='0' || c=='-')return AccessMethod::CONSTANT;
     if(c=='@')return AccessMethod::ADDRESS;
     if(c=='*')return AccessMethod::POINTER;
     return AccessMethod::NONE;
@@ -217,7 +217,8 @@ void MainWindow::stepMachine()
             if(pBText[0]!='0' && pBText[0]!='@' && pBText[0]!='*'){pBText.insert(0,'0');}
             if(pCText[0]!='0' && pCText[0]!='@' && pCText[0]!='*'){pCText.insert(0,'0');}
 
-            if(cmdText=="ADD" || cmdText == "MUL")//Commutative expressions
+            //Commutative expressions
+            if(cmdText=="ADD" || cmdText == "MUL")
             {
                 //Ensure that the constant parameter(if any) is second
                 if(getAccessMethodFromSymbol(pAText[0])==AccessMethod::CONSTANT)
@@ -226,12 +227,51 @@ void MainWindow::stepMachine()
                     pBText = pAText;
                     pAText = tmp;
                 }
-                if(cmdText=="ADD" && getAccessMethodFromSymbol(pAText[0])==AccessMethod::ADDRESS
-                        && getAccessMethodFromSymbol(pCText[0])==AccessMethod::POINTER)
-                {//Ensure address is second if pointer is third for ADD to be true to spec.
-                    auto tmp = pBText;
-                    pBText = pAText;
-                    pAText = tmp;
+                //Ensure address is after pointer if needed.
+                if(getAccessMethodFromSymbol(pAText[0])==AccessMethod::ADDRESS
+                        && getAccessMethodFromSymbol(pBText[0])==AccessMethod::POINTER)
+                {
+                    if((cmdText=="ADD" && getAccessMethodFromSymbol(pCText[0])==AccessMethod::POINTER)
+                            || cmdText=="MUL")
+                    {//Ensure address is second for MUL or if pointer is third for ADD to be true to spec.
+                        auto tmp = pBText;
+                        pBText = pAText;
+                        pAText = tmp;
+                    }
+                }
+            }
+            //Algebraic expressions
+            if(cmdText=="ADD"||cmdText=="SUB"||cmdText=="MUL"||cmdText=="DIV"||cmdText=="MOD")
+            {
+                if(getAccessMethodFromSymbol(pAText[0])==AccessMethod::CONSTANT&&
+                        getAccessMethodFromSymbol(pBText[0])==AccessMethod::CONSTANT)
+                {//Can be compiled into MOV.
+                    BOXBYTE constA = pAText.toInt(nullptr,16);
+                    BOXBYTE constB = pBText.toInt(nullptr,16);
+                    BOXBYTE result = 0x0;
+                    QString storeAddrStr = pCText;
+                    if(cmdText=="ADD"){
+                        result = constA + constB;
+                    }
+                    if(cmdText=="SUB"){
+                        result = constA - constB;
+                    }
+                    if(cmdText=="MUL"){
+                        result = constA * constB;
+                    }
+                    if(cmdText=="DIV"){
+                        if(constB==0)result=0;
+                        else result = constA / constB;
+                    }
+                    if(cmdText=="MOD"){
+                        if(constB==0)result=0;
+                        else result = constA % constB;
+                    }
+
+                    cmdText = "MOV";
+                    pAText = getHexNum(result,2);
+                    pBText = storeAddrStr;
+                    pCText = "001";
                 }
             }
 
@@ -241,7 +281,7 @@ void MainWindow::stepMachine()
                 getAccessMethodFromSymbol(pCText[0]));
             if(cmdText[0]=='0')//If number stored, do not write as opcode.
             {
-                if(cmdText.length()>1){cmdText.remove(0,1);}
+                cmdText.remove(0,1);
                 if(cmdText=="")cmdText="0";
                 bool isCmdNum;
                 BOXBYTE i = cmdText.toInt(&isCmdNum,16);
@@ -265,7 +305,13 @@ void MainWindow::stepMachine()
             machine.writeValue(numC,r*0x04 + 0x3);
         }
     }
-    machine.step();
+    if(machine.curCycle==0)
+    {
+        machine.curCycle+=1;
+    }else
+    {
+        machine.step();
+    }
     //Update memory table after step.
     updateMemoryLabels();
 }
