@@ -5,6 +5,7 @@
 #include <QPlainTextEdit>
 #include <QLabel>
 #include <QTextStream>
+#include <QBasicTimer>
 
 #include <box256machine.h>
 #include <dialogload.h>
@@ -18,7 +19,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() override;
 
     void setMachineSource(QString& src);
     void setMachineSource(QTextStream& boxStream);
@@ -26,8 +27,9 @@ public:
 
 private slots:
     void stopMachine();
-    void stepMachine();
     void playMachine();
+
+    void stepBtnReleased();
 
     void on_actionAbout_QT_triggered();
 
@@ -42,6 +44,7 @@ private slots:
     void on_actionLoad_triggered();
 
 private:
+    void stepMachine();
     Ui::MainWindow *ui;
     QPlainTextEdit *cellTexts[64][4];
     QLabel *memLabels[64][4];
@@ -49,6 +52,8 @@ private:
     void updateMemoryLabels();
     void loadBoxFile(const QString& fileName);
     DialogLoad dialogLoad;
+    QBasicTimer playTimer;
+    void timerEvent(QTimerEvent *) override;
 
 };
 #endif // MAINWINDOW_H

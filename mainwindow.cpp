@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , dialogLoad(this)
+    , playTimer()
 {
     ui->setupUi(this);
 
@@ -53,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->gridLayout->addWidget(playButton, 2,2);
 
     connect(stopButton, SIGNAL(released()), this, SLOT(stopMachine()));
-    connect(stepButton, SIGNAL(released()), this, SLOT(stepMachine()));
+    connect(stepButton, SIGNAL(released()), this, SLOT(stepBtnReleased()));
     connect(playButton, SIGNAL(released()), this, SLOT(playMachine()));
 
     //Setup table labels
@@ -186,6 +187,7 @@ QString MainWindow::getMachineSource()
 void MainWindow::stopMachine()
 {
     machine.reset();
+    playTimer.stop();
     updateMemoryLabels();
 }
 AccessMethod getAccessMethodFromSymbol(QChar c)
@@ -194,6 +196,11 @@ AccessMethod getAccessMethodFromSymbol(QChar c)
     if(c=='@')return AccessMethod::ADDRESS;
     if(c=='*')return AccessMethod::POINTER;
     return AccessMethod::NONE;
+}
+void MainWindow::stepBtnReleased()
+{
+    playTimer.stop();
+    stepMachine();
 }
 void MainWindow::stepMachine()
 {
@@ -263,12 +270,17 @@ void MainWindow::updateMemoryLabels()
         }
     }
 }
+void MainWindow::timerEvent(QTimerEvent * timer)
+{
+    stepMachine();
+}
 void MainWindow::playMachine()
 {
-    for(int i=0;i<100;i++)
+    playTimer.start(1000 / 60,this);
+    /*for(int i=0;i<100;i++)
     {
         stepMachine();
-    }
+    }*/
 }
 void MainWindow::on_srcCellChanged()
 {
