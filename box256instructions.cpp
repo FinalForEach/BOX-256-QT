@@ -152,7 +152,19 @@ void Box256InstructionFLP::execute(Box256Machine *machine, BOXBYTE pc)
 Box256InstructionTHR::Box256InstructionTHR() : Box256Instruction(){}
 void Box256InstructionTHR::execute(Box256Machine *machine, BOXBYTE pc)
 {
-    machine->createThread(paramA_w);
+    BOXBYTE pcLoc = machine->getPC(machine->getCurThread());
+    switch (accessParamA) {
+    case AccessMethod::CONSTANT:
+    {
+        machine->createThread(machine->getValue(AccessMethod::ADDRESS,pcLoc)+paramA_r-0x4);
+        break;
+    }
+    default:
+    {
+        machine->createThread(paramA_w-0x4);
+        break;
+    }
+    }
 }
 
 //MOD
