@@ -340,9 +340,14 @@ void MainWindow::updateMemoryLabels()
             for(int t=0;t<machine.getNumThreads();t++)
             {
                 int pc = machine.getValue(AccessMethod::ADDRESS,machine.getPC(t));
+                int pcLoc = machine.getValue(AccessMethod::CONSTANT,machine.getPC(t));
                 if(pc/4 ==r)
                 {
                     memLabels[r][c]->setStyleSheet("QLabel {background: blue}");
+                }
+                if(pcLoc == r*4 + c)
+                {
+                    memLabels[r][c]->setStyleSheet("QLabel {background: limegreen}");
                 }
             }
         }

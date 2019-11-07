@@ -163,12 +163,12 @@ void Box256InstructionTHR::execute(Box256Machine *machine, BOXBYTE pc)
     switch (accessParamA) {
     case AccessMethod::CONSTANT:
     {
-        machine->createThread(machine->getValue(AccessMethod::ADDRESS,pcLoc)+paramA_r-0x4);
+        machine->createThread(machine->getValue(AccessMethod::ADDRESS,pcLoc)+paramA_r);
         break;
     }
     default:
     {
-        machine->createThread(paramA_w-0x4);
+        machine->createThread(paramA_w);
         break;
     }
     }

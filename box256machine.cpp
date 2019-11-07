@@ -173,10 +173,11 @@ BOXBYTE Box256Machine::getPC(BOXBYTE threadNum) const
 }
 void Box256Machine::createThread(BOXBYTE startAddr)
 {
-    if(numThreads==0xFF)return;//Already at max threads. Undefined behaviour.
+    if(numThreads+numNewThreads==0xFF)return;//Already at max threads. Undefined behaviour.
 
-    numThreads++;
-    data[getPC(numThreads-1)]=startAddr;//Put point pc at start address
+    numNewThreads++;
+    //Put point pc at start address
+    writeValue(startAddr,getPC(numThreads+numNewThreads-1));
 }
 void Box256Machine::step()
 {
@@ -196,10 +197,13 @@ void Box256Machine::step()
         inst->execute(this,pc);
         data[getPC(t)]+=4;//Increment program counter.
     }
+    numThreads+=numNewThreads;
+    numNewThreads=0;
     curCycle++;
 }
 void Box256Machine::reset()
 {
+    numNewThreads=0;
     currentThread=0;
     curCycle=0;
     numThreads=1;

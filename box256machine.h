@@ -11,6 +11,7 @@ private:
     BOXBYTE data[256];
     BOXBYTE pixels[256];
     BOXBYTE numThreads;
+    BOXBYTE numNewThreads;
     QMap<BOXBYTE,Box256Instruction*> instMap;
     BOXBYTE currentThread;
 public:
