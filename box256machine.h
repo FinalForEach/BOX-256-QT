@@ -14,6 +14,7 @@ private:
     QMap<BOXBYTE,Box256Instruction*> instMap;
     BOXBYTE currentThread;
 public:
+    bool dataJustWritten[256];
     int curCycle;
 
     Box256Machine();

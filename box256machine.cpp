@@ -139,6 +139,7 @@ BOXBYTE Box256Machine::getOpcodeFromCommand(QString name, AccessMethod accessA, 
 void Box256Machine::writeValue(BOXBYTE wval, BOXBYTE addr)
 {
     data[addr]=wval;
+    dataJustWritten[addr]=true;
 }
 void Box256Machine::writePixel(BOXBYTE wval, BOXBYTE pixAddr)
 {
@@ -179,6 +180,10 @@ void Box256Machine::createThread(BOXBYTE startAddr)
 }
 void Box256Machine::step()
 {
+    for(int i=0;i<256;i++)
+    {
+        dataJustWritten[i]=false;
+    }
     for(BOXBYTE t=0;t<numThreads;t++)
     {
         currentThread=t;
@@ -202,5 +207,6 @@ void Box256Machine::reset()
     {
         data[b]=0x0;
         pixels[b]=0x0;
+        dataJustWritten[b]=false;
     }
 }

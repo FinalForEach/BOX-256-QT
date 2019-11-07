@@ -22,7 +22,8 @@ void Box256InstructionNOP::execute(Box256Machine *machine, BOXBYTE pc){}
 Box256InstructionMOV::Box256InstructionMOV() : Box256Instruction(){}
 void Box256InstructionMOV::execute(Box256Machine *machine, BOXBYTE pc)
 {
-    for(int i=0;i<paramC_r || i==0;i++)
+    int i = paramC_r-1;
+    for(;i>=0;i--)//Work backwards as not to move prior values
     {
         if(accessParamA==AccessMethod::CONSTANT)
         {
@@ -143,7 +144,7 @@ void Box256InstructionPIX::execute(Box256Machine *machine, BOXBYTE pc)
 Box256InstructionFLP::Box256InstructionFLP() : Box256Instruction(){}
 void Box256InstructionFLP::execute(Box256Machine *machine, BOXBYTE pc)
 {
-    for(int i=0;i<paramC_r || i==0;i++)
+    for(int i=0;i<paramC_r;i++)
     {
         BOXBYTE locA = paramA_w + i;
         BOXBYTE locB = paramB_w + i;

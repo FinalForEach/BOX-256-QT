@@ -274,6 +274,17 @@ void MainWindow::stepMachine()
                     pCText = "001";
                 }
             }
+            if(cmdText=="MOV" || cmdText == "FLP")
+            {
+                if(getAccessMethodFromSymbol(pCText[0])==AccessMethod::CONSTANT)
+                {
+                    BOXBYTE constC = pCText.toInt(nullptr,16);
+                    if(constC==0)
+                    {
+                        pCText = "001";//Source code compiles to at least one MOV / FLP, lest it be dead code.
+                    }
+                }
+            }
 
             BOXBYTE op = machine.getOpcodeFromCommand(cmdText,
                 getAccessMethodFromSymbol(pAText[0]),
@@ -322,6 +333,10 @@ void MainWindow::updateMemoryLabels()
             auto data = machine.getValue(AccessMethod::ADDRESS,r*4 + c);
             memLabels[r][c]->setText(getHexNum(data,1));
             memLabels[r][c]->setStyleSheet("QLabel {background: white}");
+            if(machine.dataJustWritten[r*4 + c])
+            {
+                memLabels[r][c]->setStyleSheet("QLabel {background: gold}");
+            }
             for(int t=0;t<machine.getNumThreads();t++)
             {
                 int pc = machine.getValue(AccessMethod::ADDRESS,machine.getPC(t));
