@@ -39,6 +39,10 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionNew"/>
+    <addaction name="actionLoad"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_Example_Program"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -65,6 +69,26 @@
   <action name="actionAbout_QT">
    <property name="text">
     <string>About QT</string>
+   </property>
+  </action>
+  <action name="actionClear_source">
+   <property name="text">
+    <string>Clear source</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actionLoad_Example_Program">
+   <property name="text">
+    <string>Load Example Program</string>
+   </property>
+  </action>
+  <action name="actionLoad">
+   <property name="text">
+    <string>Save / Load</string>
    </property>
   </action>
  </widget>

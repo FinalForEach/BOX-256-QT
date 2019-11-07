@@ -9,7 +9,6 @@
 #include <QButtonGroup>
 #include <QPushButton>
 #include <QFile>
-#include <QTextStream>
 
 #include "box256glwidget.h"
 #include "tablecelledit.h"
@@ -29,6 +28,7 @@ static QString getHexNum(int i, int numLeadingZeros=0)
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , dialogLoad(this)
 {
     ui->setupUi(this);
 
@@ -116,7 +116,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
     memTable->setShowGrid(false);
     memTable->horizontalHeader()->hide();
-    loadBoxFile(":/machine/default_blue_square.box256");
+    on_actionLoad_Example_Program_triggered();
 }
 void MainWindow::loadBoxFile(const QString& fileName)
 {
@@ -127,6 +127,12 @@ void MainWindow::loadBoxFile(const QString& fileName)
         QMessageBox::warning(this,"Could not load box file.",
                              "Error: <b>"+ boxFile.errorString()+"</b>");
     }
+    setMachineSource(boxStream);
+
+    boxFile.close();
+}
+void MainWindow::setMachineSource(QTextStream& boxStream)
+{
     int r=0;
     while(!boxStream.atEnd())
     {
@@ -138,14 +144,44 @@ void MainWindow::loadBoxFile(const QString& fileName)
                                  "Could only load <b>" + QString::number(r)+"</b> lines");
             break;
         }
-        cellTexts[r][0]->setPlainText(fields[0]);
-        cellTexts[r][1]->setPlainText(fields[1]);
-        cellTexts[r][2]->setPlainText(fields[2]);
-        cellTexts[r][3]->setPlainText(fields[3]);
+        cellTexts[r][0]->setPlainText("0");
+        cellTexts[r][1]->setPlainText("0");
+        cellTexts[r][2]->setPlainText("0");
+        cellTexts[r][3]->setPlainText("0");
+        if(fields.length()>=1){
+            cellTexts[r][0]->setPlainText(fields[0]);
+        }
+        if(fields.length()>=2){
+            cellTexts[r][1]->setPlainText(fields[1]);
+        }
+        if(fields.length()>=3){
+            cellTexts[r][2]->setPlainText(fields[2]);
+        }
+        if(fields.length()>=4){
+            cellTexts[r][3]->setPlainText(fields[3]);
+        }
         r++;
     }
+}
+void MainWindow::setMachineSource(QString& src)
+{
+    QTextStream boxStream(&src);
+    setMachineSource(boxStream);
+}
+QString MainWindow::getMachineSource()
+{
+    QString srcCode ="";
+    for(BOXBYTE r=0;r<64;r++)
+    {
+        auto cmdText = cellTexts[r][0]->toPlainText();
+        auto pAText = cellTexts[r][1]->toPlainText();
+        auto pBText = cellTexts[r][2]->toPlainText();
+        auto pCText = cellTexts[r][3]->toPlainText();
 
-    boxFile.close();
+        srcCode+=cmdText + " " + pAText+ " " + pBText+ " " + pCText + "\n";
+    }
+    return srcCode;
+
 }
 void MainWindow::stopMachine()
 {
@@ -205,12 +241,7 @@ void MainWindow::stepMachine()
             machine.writeValue(numC,r*0x04 + 0x3);
         }
     }
-   /* BOXBYTE op = machine.getOpcodeFromCommand("PIX",AccessMethod::CONSTANT, AccessMethod::CONSTANT);
-    machine.writeValue(op,0x0);
-    machine.writeValue(0xFF,0x1);
-    machine.writeValue(0x0B,0x2);*/
     machine.step();
-
     //Update memory table after step.
     updateMemoryLabels();
 }
@@ -298,4 +329,28 @@ void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this,"About Box256QT","<h3>About Box256QT</h3> A Box256 Emulator made with QT. Made by <a href=\"https://github.com/FinalForEach\">FinalForEach</a>. <br/>"
                                              "The original Box256 reference implementation by <a href=\"http://box-256.com\">Juha Kiili</a>");
+}
+
+void MainWindow::on_actionNew_triggered()
+{
+    for(int r=0;r<64;r++)
+    {
+        cellTexts[r][0]->setPlainText("0");
+        cellTexts[r][1]->setPlainText("0");
+        cellTexts[r][2]->setPlainText("0");
+        cellTexts[r][3]->setPlainText("0");
+    }
+    machine.reset();
+    updateMemoryLabels();
+}
+
+void MainWindow::on_actionLoad_Example_Program_triggered()
+{
+    loadBoxFile(":/machine/default_blue_square.box256");
+}
+
+void MainWindow::on_actionLoad_triggered()
+{
+    dialogLoad.setSrcText(getMachineSource());
+    dialogLoad.show();
 }

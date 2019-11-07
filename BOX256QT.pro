@@ -19,6 +19,7 @@ SOURCES += \
     box256glwidget.cpp \
     box256instructions.cpp \
     box256machine.cpp \
+    dialogload.cpp \
     main.cpp \
     mainwindow.cpp \
     tablecelledit.cpp
@@ -27,10 +28,12 @@ HEADERS += \
     box256glwidget.h \
     box256machine.h \
     boxtypes.h \
+    dialogload.h \
     mainwindow.h \
     tablecelledit.h
 
 FORMS += \
+    dialogload.ui \
     mainwindow.ui
 
 # Default rules for deployment.
