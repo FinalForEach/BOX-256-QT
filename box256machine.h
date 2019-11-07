@@ -10,7 +10,7 @@ class Box256Machine
 private:
     BOXBYTE data[256];
     BOXBYTE pixels[256];
-    int numThreads;
+    BOXBYTE numThreads;
     QMap<BOXBYTE,Box256Instruction*> instMap;
     BOXBYTE currentThread;
 public:
@@ -23,7 +23,7 @@ public:
     BOXBYTE getPixel(BOXBYTE pixAddr) const;
     BOXBYTE getValue(AccessMethod valMethod, BOXBYTE getter) const;
     BOXBYTE getPC(BOXBYTE threadNum) const;
-    void createThread();
+    void createThread(BOXBYTE startAddr);
 
     void step();
     void reset();
