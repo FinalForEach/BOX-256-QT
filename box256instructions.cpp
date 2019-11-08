@@ -145,18 +145,20 @@ void Box256InstructionPIX::execute(Box256Machine *machine, BOXBYTE pc)
 Box256InstructionFLP::Box256InstructionFLP() : Box256Instruction(){}
 void Box256InstructionFLP::execute(Box256Machine *machine, BOXBYTE pc)
 {
+    int numFLPs = paramC_r;
     QVector<BOXBYTE> tmpBytesA, tmpBytesB;
 
-    for(int i=0;i<paramC_r;i++){
+    for(int i=0;i<numFLPs;i++){
         tmpBytesA.append(machine->getValue(AccessMethod::ADDRESS,paramA_w+i));
         tmpBytesB.append(machine->getValue(AccessMethod::ADDRESS,paramB_w+i));
     }
-    for(int i=0;i<paramC_r;i++){
+    for(int i=0;i<numFLPs;i++){
         machine->writeValue(tmpBytesA[i],paramB_w+ i);
     }
-    for(int i=0;i<paramC_r;i++){
+    for(int i=0;i<numFLPs;i++){
         machine->writeValue(tmpBytesB[i],paramA_w+ i);
     }
+
 }
 
 //THR
