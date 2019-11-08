@@ -1,4 +1,5 @@
 #include "box256machine.h"
+#include <QVector>
 
 #define paramA_r getRParamA(machine,pc)
 #define paramB_r getRParamB(machine,pc)
@@ -139,19 +140,22 @@ void Box256InstructionPIX::execute(Box256Machine *machine, BOXBYTE pc)
 {
     machine->writePixel(paramB_r,paramA_r);
 };
-
+#include <QDebug>
 //FLP
 Box256InstructionFLP::Box256InstructionFLP() : Box256Instruction(){}
 void Box256InstructionFLP::execute(Box256Machine *machine, BOXBYTE pc)
 {
-    for(int i=0;i<paramC_r;i++)
-    {
-        BOXBYTE locA = paramA_w + i;
-        BOXBYTE locB = paramB_w + i;
-        BOXBYTE valA = machine->getValue(AccessMethod::ADDRESS,locA);
-        BOXBYTE valB = machine->getValue(AccessMethod::ADDRESS,locB);
-        machine->writeValue(valA,locB);
-        machine->writeValue(valB,locA);
+    QVector<BOXBYTE> tmpBytesA, tmpBytesB;
+
+    for(int i=0;i<paramC_r;i++){
+        tmpBytesA.append(machine->getValue(AccessMethod::ADDRESS,paramA_w+i));
+        tmpBytesB.append(machine->getValue(AccessMethod::ADDRESS,paramB_w+i));
+    }
+    for(int i=0;i<paramC_r;i++){
+        machine->writeValue(tmpBytesA[i],paramB_w+ i);
+    }
+    for(int i=0;i<paramC_r;i++){
+        machine->writeValue(tmpBytesB[i],paramA_w+ i);
     }
 }
 
