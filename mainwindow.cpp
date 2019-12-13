@@ -12,19 +12,6 @@
 
 #include "box256glwidget.h"
 #include "tablecelledit.h"
-static QString getHexNum(int i, int numLeadingZeros=0)
-{
-    QString hexNum = "";
-    for(int x=1;x<=numLeadingZeros;x++)
-    {
-        if(i<qPow(16,x))
-        {
-            hexNum+="0";
-        }
-    }
-    hexNum+=QString::number(i,16);
-    return hexNum.toUpper();
-}
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -32,7 +19,6 @@ MainWindow::MainWindow(QWidget *parent)
     , playTimer()
 {
     ui->setupUi(this);
-
 
     ui->gridLayout->addWidget(new QLabel("Source",this),0,0);
     ui->gridLayout->addWidget(new QLabel("Memory",this),0,1);
@@ -315,6 +301,7 @@ void MainWindow::stepMachine()
             machine.writeValue(numB,r*0x04 + 0x2);
             machine.writeValue(numC,r*0x04 + 0x3);
         }
+        machine.flushNewData();
     }
     if(machine.curCycle==0)
     {
@@ -341,7 +328,7 @@ void MainWindow::updateMemoryLabels()
             {
                 int pc = machine.getValue(AccessMethod::ADDRESS,machine.getPC(t));
                 int pcLoc = machine.getValue(AccessMethod::CONSTANT,machine.getPC(t));
-                if(pc/4 ==r)
+                if((pc >= r*4 + c - 3) && (pc <= r*4 + c ))
                 {
                     memLabels[r][c]->setStyleSheet("QLabel {background: blue}");
                 }
@@ -352,6 +339,9 @@ void MainWindow::updateMemoryLabels()
             }
         }
     }
+    QLabel* memLabel = dynamic_cast<QLabel*>(ui->gridLayout->itemAtPosition(0,1)->widget());
+    if(memLabel!=nullptr)
+        memLabel->setText("Memory, " + QString::number(machine.getNumThreads())+" threads");
 }
 void MainWindow::timerEvent(QTimerEvent * timer)
 {

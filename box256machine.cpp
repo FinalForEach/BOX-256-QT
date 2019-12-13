@@ -138,7 +138,7 @@ BOXBYTE Box256Machine::getOpcodeFromCommand(QString name, AccessMethod accessA, 
 }
 void Box256Machine::writeValue(BOXBYTE wval, BOXBYTE addr)
 {
-    data[addr]=wval;
+    newdata[addr]=wval;
     dataJustWritten[addr]=true;
 }
 void Box256Machine::writePixel(BOXBYTE wval, BOXBYTE pixAddr)
@@ -149,18 +149,21 @@ BOXBYTE Box256Machine::getPixel(BOXBYTE pixAddr) const
 {
     return pixels[pixAddr];
 }
-BOXBYTE Box256Machine::getValue(AccessMethod valMethod, BOXBYTE getter) const
+BOXBYTE Box256Machine::getValue(AccessMethod valMethod, BOXBYTE getter, bool getCached) const
 {
+    const BOXBYTE *memory = data;
+    if(!getCached){memory = newdata;}
+
     switch(valMethod)
     {
         case AccessMethod::CONSTANT:{
             return getter;
         }
         case AccessMethod::ADDRESS:{
-            return data[getter];
+            return memory[getter];
         }
         case AccessMethod::POINTER:{
-            return data[data[getter]];
+            return memory[memory[getter]];
         }
         case AccessMethod::NONE:{
             return 0;
@@ -179,24 +182,36 @@ void Box256Machine::createThread(BOXBYTE startAddr)
     //Put point pc at start address
     writeValue(startAddr,getPC(numThreads+numNewThreads-1));
 }
+void Box256Machine::flushNewData()
+{
+    for(int i=0;i<0x100;i++)
+    {
+        data[i]=newdata[i];
+    }
+}
+#include <QDebug>
 void Box256Machine::step()
 {
     for(int i=0;i<256;i++)
     {
         dataJustWritten[i]=false;
     }
+    qInfo()<<"Stepping machine:";
     for(BOXBYTE t=0;t<numThreads;t++)
     {
         currentThread=t;
-        BOXBYTE pc = getValue(AccessMethod::ADDRESS,getPC(t));
+        BOXBYTE pc = getValue(AccessMethod::ADDRESS,getPC(t),false);
 
-        BOXBYTE opcode = getValue(AccessMethod::ADDRESS,pc);
+        BOXBYTE opcode = getValue(AccessMethod::ADDRESS,pc,false);
 
         Box256Instruction *inst = instMap[opcode];
         if(inst==nullptr)inst=instMap[0x0];//Do NOP if no opcode found.
+
+        qInfo()<<"\tExecuting "<<inst->instName<<", opcode: "<<getHexNum(opcode)<<" at PC="<<pc;
         inst->execute(this,pc);
-        data[getPC(t)]+=4;//Increment program counter.
+        newdata[getPC(t)]+=4;//Increment program counter.
     }
+    flushNewData();
     numThreads+=numNewThreads;
     numNewThreads=0;
     curCycle++;
@@ -209,7 +224,7 @@ void Box256Machine::reset()
     numThreads=1;
     for(int b=0x0; b<0x100;b++)
     {
-        data[b]=0x0;
+        newdata[b]=data[b]=0x0;
         pixels[b]=0x0;
         dataJustWritten[b]=false;
     }

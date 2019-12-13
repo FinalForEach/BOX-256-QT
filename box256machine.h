@@ -8,6 +8,7 @@ class Box256Instruction;
 class Box256Machine
 {
 private:
+    BOXBYTE newdata[256];
     BOXBYTE data[256];
     BOXBYTE pixels[256];
     BOXBYTE numThreads;
@@ -23,12 +24,13 @@ public:
     void writeValue(BOXBYTE wval, BOXBYTE addr);
     void writePixel(BOXBYTE wval, BOXBYTE pixAddr);
     BOXBYTE getPixel(BOXBYTE pixAddr) const;
-    BOXBYTE getValue(AccessMethod valMethod, BOXBYTE getter) const;
+    BOXBYTE getValue(AccessMethod valMethod, BOXBYTE getter, bool getCached=true) const;
     BOXBYTE getPC(BOXBYTE threadNum) const;
     void createThread(BOXBYTE startAddr);
 
     void step();
     void reset();
+    void flushNewData();
 
     int getNumThreads() const
     {
