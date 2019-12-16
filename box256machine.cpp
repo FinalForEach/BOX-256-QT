@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QTextStream>
+#include <QDebug>
 
 Box256Machine::Box256Machine()
 {
@@ -138,8 +139,10 @@ BOXBYTE Box256Machine::getOpcodeFromCommand(QString name, AccessMethod accessA, 
 }
 void Box256Machine::writeValue(BOXBYTE wval, BOXBYTE addr)
 {
+    qInfo()<<"\t\t\Modified Address "<<getHexNum(addr)<<" from Value "<<getHexNum(newdata[addr])<<" to Value "<<getHexNum(wval);
     newdata[addr]=wval;
     dataJustWritten[addr]=true;
+    dataJustWrittenThisThread[addr]=true;
 }
 void Box256Machine::writePixel(BOXBYTE wval, BOXBYTE pixAddr)
 {
@@ -189,16 +192,18 @@ void Box256Machine::flushNewData()
         data[i]=newdata[i];
     }
 }
-#include <QDebug>
 void Box256Machine::step()
 {
-    for(int i=0;i<256;i++)
-    {
-        dataJustWritten[i]=false;
+    for(int b=0x0; b<0x100;b++){
+        dataJustWritten[b]=false;
+        dataJustWrittenThisThread[b]=false;
     }
     qInfo()<<"Stepping machine:";
     for(BOXBYTE t=0;t<numThreads;t++)
     {
+        for(int b=0x0; b<0x100;b++){
+            dataJustWrittenThisThread[b]=false;
+        }
         currentThread=t;
         BOXBYTE pc = getValue(AccessMethod::ADDRESS,getPC(t),false);
 
@@ -207,9 +212,10 @@ void Box256Machine::step()
         Box256Instruction *inst = instMap[opcode];
         if(inst==nullptr)inst=instMap[0x0];//Do NOP if no opcode found.
 
-        qInfo()<<"\tExecuting "<<inst->instName<<", opcode: "<<getHexNum(opcode)<<" at PC="<<pc;
+        qInfo()<<"\tThread"<<t<<": Executing "<<inst->instName<<", opcode: "<<getHexNum(opcode)<<" at PC="<<pc;
         inst->execute(this,pc);
-        newdata[getPC(t)]+=4;//Increment program counter.
+        if(!dataJustWrittenThisThread[getPC(t)])//If PC not modified to immediate jump
+            newdata[getPC(t)]+=4;//Increment program counter.
     }
     flushNewData();
     numThreads+=numNewThreads;
@@ -227,5 +233,7 @@ void Box256Machine::reset()
         newdata[b]=data[b]=0x0;
         pixels[b]=0x0;
         dataJustWritten[b]=false;
+        dataJustWrittenThisThread[b]=false;
     }
+    qInfo()<<"\nMachine reset.";
 }

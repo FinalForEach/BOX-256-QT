@@ -318,11 +318,17 @@ void MainWindow::updateMemoryLabels()
     for(BOXBYTE r=0;r<64;r++){
         for(BOXBYTE c=0;c<4;c++){
             auto data = machine.getValue(AccessMethod::ADDRESS,r*4 + c);
-            memLabels[r][c]->setText(getHexNum(data,1));
-            memLabels[r][c]->setStyleSheet("QLabel {background: white}");
+            auto label = memLabels[r][c];
+            label->setText(getHexNum(data,1));
+            label->setStyleSheet("QLabel {background: white}");
+            QString tooltip = "";
+            if(data==0)
+            {
+                label->setStyleSheet("QLabel {background: darkgrey}");
+            }
             if(machine.dataJustWritten[r*4 + c])
             {
-                memLabels[r][c]->setStyleSheet("QLabel {background: gold}");
+                label->setStyleSheet("QLabel {background: gold}");
             }
             for(int t=0;t<machine.getNumThreads();t++)
             {
@@ -330,13 +336,15 @@ void MainWindow::updateMemoryLabels()
                 int pcLoc = machine.getValue(AccessMethod::CONSTANT,machine.getPC(t));
                 if((pc >= r*4 + c - 3) && (pc <= r*4 + c ))
                 {
-                    memLabels[r][c]->setStyleSheet("QLabel {background: blue}");
+                    label->setStyleSheet("QLabel {background: blue}");
+                    tooltip+="Thread"+QString::number(t)+"<br/>";
                 }
                 if(pcLoc == r*4 + c)
                 {
-                    memLabels[r][c]->setStyleSheet("QLabel {background: limegreen}");
+                    label->setStyleSheet("QLabel {background: limegreen}");
                 }
             }
+            label->setToolTip(tooltip);
         }
     }
     QLabel* memLabel = dynamic_cast<QLabel*>(ui->gridLayout->itemAtPosition(0,1)->widget());

@@ -23,8 +23,7 @@ void Box256InstructionNOP::execute(Box256Machine *machine, BOXBYTE pc){}
 Box256InstructionMOV::Box256InstructionMOV() : Box256Instruction(){}
 void Box256InstructionMOV::execute(Box256Machine *machine, BOXBYTE pc)
 {
-    int i = paramC_r-1;
-    for(;i>=0;i--)//Work backwards as not to move prior values
+    for(int i = paramC_r-1;i>=0;i--)//Work backwards as not to move prior values
     {
         if(accessParamA==AccessMethod::CONSTANT)
         {
@@ -32,6 +31,19 @@ void Box256InstructionMOV::execute(Box256Machine *machine, BOXBYTE pc)
         }else
         {
             machine->writeValue(machine->getValue(AccessMethod::ADDRESS,paramA_w + i),paramB_w + i);
+            /*BOXBYTE pA = machine->getValue(AccessMethod::CONSTANT,pc+1);
+            if(accessParamA==AccessMethod::ADDRESS)
+            {
+                BOXBYTE val = machine->getValue(AccessMethod::ADDRESS,pA+i,false);
+                machine->writeValue(val,paramB_w + i);
+
+            }else
+            {
+                BOXBYTE addr = machine->getValue(AccessMethod::ADDRESS,pA,false);
+                BOXBYTE val = machine->getValue(AccessMethod::ADDRESS,addr+i);
+                machine->writeValue(val,paramB_w + i);
+                //machine->writeValue(machine->getValue(AccessMethod::ADDRESS,paramA_w + i),paramB_w + i);
+            }*/
         }
     }
 }

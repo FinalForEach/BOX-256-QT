@@ -15,6 +15,7 @@ private:
     BOXBYTE numNewThreads;
     QMap<BOXBYTE,Box256Instruction*> instMap;
     BOXBYTE currentThread;
+    bool dataJustWrittenThisThread[256];
 public:
     bool dataJustWritten[256];
     int curCycle;
@@ -47,45 +48,38 @@ public:
 class Box256Instruction
 {
 protected:
+    BOXBYTE getRParam(Box256Machine *machine, BOXBYTE pc, BOXBYTE pcOffset, AccessMethod access){
+        BOXBYTE param = machine->getValue(AccessMethod::ADDRESS,pc + pcOffset,false);
+        return machine->getValue(access,param);
+    }
+    BOXBYTE getWParam(Box256Machine *machine, BOXBYTE pc, BOXBYTE pcOffset, AccessMethod access){
+        BOXBYTE param = machine->getValue(AccessMethod::ADDRESS,pc + pcOffset);
+        if(access==AccessMethod::ADDRESS)
+            return machine->getValue(AccessMethod::CONSTANT,param);
+        if(access==AccessMethod::POINTER){
+            return machine->getValue(AccessMethod::ADDRESS,param);
+        }
+        assert(0);//Fail if writing to a 'constant'
+        return 0;
+    }
     BOXBYTE getRParamA(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE param = machine->getValue(AccessMethod::ADDRESS,pc + 1);
-        return machine->getValue(accessParamA,param);
+        return getRParam(machine,pc,1,accessParamA);
     }
     BOXBYTE getRParamB(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE param = machine->getValue(AccessMethod::ADDRESS,pc + 2);
-        return machine->getValue(accessParamB,param);
+        return getRParam(machine,pc,2,accessParamB);
     }
     BOXBYTE getRParamC(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE param = machine->getValue(AccessMethod::ADDRESS,pc + 3);
-        return machine->getValue(accessParamC,param);
+        return getRParam(machine,pc,3,accessParamC);
     }
 
     BOXBYTE getWParamA(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE param = machine->getValue(AccessMethod::ADDRESS,pc + 1);
-        if(accessParamA==AccessMethod::ADDRESS)
-            return machine->getValue(AccessMethod::CONSTANT,param);
-        if(accessParamA==AccessMethod::POINTER)
-            return machine->getValue(AccessMethod::ADDRESS,param);
-        assert(0);//Fail if writing to a 'constant'
-        return 0;
+        return getWParam(machine,pc,1,accessParamA);
     }
     BOXBYTE getWParamB(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE param = machine->getValue(AccessMethod::ADDRESS,pc + 2);
-        if(accessParamB==AccessMethod::ADDRESS)
-            return machine->getValue(AccessMethod::CONSTANT,param);
-        if(accessParamB==AccessMethod::POINTER)
-            return machine->getValue(AccessMethod::ADDRESS,param);
-        assert(0);//Fail if writing to a 'constant'
-        return 0;
+        return getWParam(machine,pc,2,accessParamB);
     }
     BOXBYTE getWParamC(Box256Machine *machine, BOXBYTE pc){
-        BOXBYTE param = machine->getValue(AccessMethod::ADDRESS,pc + 3);
-        if(accessParamC==AccessMethod::ADDRESS)
-            return machine->getValue(AccessMethod::CONSTANT,param);
-        if(accessParamC==AccessMethod::POINTER)
-            return machine->getValue(AccessMethod::ADDRESS,param);
-        assert(0);//Fail if writing to a 'constant'
-        return 0;
+        return getWParam(machine,pc,3,accessParamC);
     }
 public:
     int numArgs;
